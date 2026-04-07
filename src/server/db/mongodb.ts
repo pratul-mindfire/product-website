@@ -2,22 +2,24 @@ import "server-only";
 
 import { MongoClient } from "mongodb";
 
+import { DATABASE_CONFIG } from "@/constants/server";
+
 declare global {
   var __mongoClientPromise__: Promise<MongoClient> | undefined;
 }
 
 function getMongoUri() {
-  const uri = process.env.MONGODB_URI;
+  const uri = process.env[DATABASE_CONFIG.env.uri];
 
   if (!uri) {
-    throw new Error("Missing MONGODB_URI environment variable.");
+    throw new Error(DATABASE_CONFIG.missingUriMessage);
   }
 
   return uri;
 }
 
 function getMongoDbName() {
-  return process.env.MONGODB_DB ?? "product-website";
+  return process.env[DATABASE_CONFIG.env.db] ?? DATABASE_CONFIG.fallbackDbName;
 }
 
 function getClientPromise() {
@@ -34,7 +36,7 @@ async function ensureIndexes(client: MongoClient) {
   if (!indexesPromise) {
     indexesPromise = client
       .db(getMongoDbName())
-      .collection("users")
+      .collection(DATABASE_CONFIG.usersCollection)
       .createIndex({ email: 1 }, { unique: true })
       .then(() => undefined);
   }

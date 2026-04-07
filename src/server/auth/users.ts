@@ -8,6 +8,8 @@ import {
 } from "node:crypto";
 import { MongoServerError } from "mongodb";
 
+import { AUTH_VALIDATION } from "@/constants/auth";
+import { DATABASE_CONFIG, SESSION_CONFIG } from "@/constants/server";
 import { getDatabase } from "@/server/db/mongodb";
 
 type StoredUser = {
@@ -24,9 +26,11 @@ function normalizeEmail(email: string) {
 
 function hashPassword(
   password: string,
-  salt = randomBytes(16).toString("hex"),
+  salt = randomBytes(16).toString(SESSION_CONFIG.hashEncoding),
 ) {
-  const derivedKey = scryptSync(password, salt, 64).toString("hex");
+  const derivedKey = scryptSync(password, salt, 64).toString(
+    SESSION_CONFIG.hashEncoding,
+  );
   return `${salt}:${derivedKey}`;
 }
 
@@ -38,7 +42,7 @@ function verifyPassword(password: string, passwordHash: string) {
   }
 
   const inputHash = scryptSync(password, salt, 64);
-  const expectedHash = Buffer.from(storedHash, "hex");
+  const expectedHash = Buffer.from(storedHash, SESSION_CONFIG.hashEncoding);
 
   if (inputHash.length !== expectedHash.length) {
     return false;
@@ -63,7 +67,7 @@ function mapUser(user: Pick<StoredUser, "id" | "name" | "email">): SessionUser {
 
 async function getUsersCollection() {
   const database = await getDatabase();
-  return database.collection<StoredUser>("users");
+  return database.collection<StoredUser>(DATABASE_CONFIG.usersCollection);
 }
 
 export async function registerUser(input: {
@@ -75,18 +79,18 @@ export async function registerUser(input: {
   const email = normalizeEmail(input.email);
   const password = input.password;
 
-  if (name.length < 2) {
-    return { ok: false as const, error: "Name must be at least 2 characters." };
+  if (name.length < AUTH_VALIDATION.minNameLength) {
+    return { ok: false as const, error: AUTH_VALIDATION.invalidName };
   }
 
   if (!email.includes("@")) {
-    return { ok: false as const, error: "Enter a valid email address." };
+    return { ok: false as const, error: AUTH_VALIDATION.invalidEmail };
   }
 
-  if (password.length < 6) {
+  if (password.length < AUTH_VALIDATION.minPasswordLength) {
     return {
       ok: false as const,
-      error: "Password must be at least 6 characters.",
+      error: AUTH_VALIDATION.invalidPassword,
     };
   }
 
@@ -96,7 +100,7 @@ export async function registerUser(input: {
   if (existingUser) {
     return {
       ok: false as const,
-      error: "An account with this email already exists.",
+      error: AUTH_VALIDATION.duplicateEmail,
     };
   }
 
@@ -111,10 +115,13 @@ export async function registerUser(input: {
   try {
     await users.insertOne(user);
   } catch (error) {
-    if (error instanceof MongoServerError && error.code === 11000) {
+    if (
+      error instanceof MongoServerError &&
+      error.code === DATABASE_CONFIG.duplicateKeyCode
+    ) {
       return {
         ok: false as const,
-        error: "An account with this email already exists.",
+        error: AUTH_VALIDATION.duplicateEmail,
       };
     }
 
@@ -137,7 +144,7 @@ export async function authenticateUser(input: {
   const user = await users.findOne({ email });
 
   if (!user || !verifyPassword(password, user.passwordHash)) {
-    return { ok: false as const, error: "Invalid email or password." };
+    return { ok: false as const, error: AUTH_VALIDATION.invalidCredentials };
   }
 
   return {

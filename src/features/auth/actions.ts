@@ -2,6 +2,8 @@
 
 import { redirect } from "next/navigation";
 
+import { APP_ROUTES } from "@/constants/app";
+import { AUTH_FORM_FIELDS } from "@/constants/auth";
 import { authenticateUser, registerUser } from "@/server/auth/users";
 import { createSession, deleteSession } from "@/server/auth/session";
 
@@ -23,9 +25,9 @@ export async function registerAction(
   formData: FormData,
 ): Promise<AuthFormState> {
   void previousState;
-  const name = readField(formData, "name");
-  const email = readField(formData, "email");
-  const password = readField(formData, "password");
+  const name = readField(formData, AUTH_FORM_FIELDS.name);
+  const email = readField(formData, AUTH_FORM_FIELDS.email);
+  const password = readField(formData, AUTH_FORM_FIELDS.password);
 
   const result = await registerUser({ name, email, password });
 
@@ -34,7 +36,7 @@ export async function registerAction(
   }
 
   await createSession(result.user.id);
-  redirect("/");
+  redirect(APP_ROUTES.home);
 }
 
 export async function loginAction(
@@ -42,8 +44,8 @@ export async function loginAction(
   formData: FormData,
 ): Promise<AuthFormState> {
   void previousState;
-  const email = readField(formData, "email");
-  const password = readField(formData, "password");
+  const email = readField(formData, AUTH_FORM_FIELDS.email);
+  const password = readField(formData, AUTH_FORM_FIELDS.password);
 
   const result = await authenticateUser({ email, password });
 
@@ -52,10 +54,10 @@ export async function loginAction(
   }
 
   await createSession(result.user.id);
-  redirect("/");
+  redirect(APP_ROUTES.home);
 }
 
 export async function logoutAction() {
   await deleteSession();
-  redirect("/login");
+  redirect(APP_ROUTES.login);
 }

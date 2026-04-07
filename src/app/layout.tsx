@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { APP_METADATA } from "@/constants/app";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Product Website",
-  description: "Product website with register, login, and logout flow",
+  title: APP_METADATA.title,
+  description: APP_METADATA.description,
 };
 
 export default function RootLayout({
