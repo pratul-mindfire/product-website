@@ -1,15 +1,8 @@
-export const DASHBOARD_NAV_ITEMS = [
-  "Overview",
-  "Orders",
-  "Products",
-  "Customers",
-  "Analytics",
-] as const;
-
 export const DASHBOARD_TEXT = {
   brand: "Product Hub",
   title: "Home",
   subtitle: "Your account is active and ready to use.",
+  navItems: ["Overview", "Orders", "Products", "Customers", "Analytics"],
   logout: "Logout",
   badge: "Auth Enabled",
   welcomePrefix: "Welcome back,",

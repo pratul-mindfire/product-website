@@ -5,6 +5,7 @@ export const DATABASE_CONFIG = {
   },
   fallbackDbName: "product-website",
   usersCollection: "users",
+  subscribersCollection: "subscribers",
   missingUriMessage: "Missing MONGODB_URI environment variable.",
   duplicateKeyCode: 11000,
 } as const;

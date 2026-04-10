@@ -34,11 +34,16 @@ let indexesPromise: Promise<void> | null = null;
 
 async function ensureIndexes(client: MongoClient) {
   if (!indexesPromise) {
-    indexesPromise = client
-      .db(getMongoDbName())
-      .collection(DATABASE_CONFIG.usersCollection)
-      .createIndex({ email: 1 }, { unique: true })
-      .then(() => undefined);
+    const database = client.db(getMongoDbName());
+
+    indexesPromise = Promise.all([
+      database
+        .collection(DATABASE_CONFIG.usersCollection)
+        .createIndex({ email: 1 }, { unique: true }),
+      database
+        .collection(DATABASE_CONFIG.subscribersCollection)
+        .createIndex({ email: 1 }, { unique: true }),
+    ]).then(() => undefined);
   }
 
   await indexesPromise;

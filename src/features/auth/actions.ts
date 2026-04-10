@@ -36,7 +36,7 @@ export async function registerAction(
   }
 
   await createSession(result.user.id);
-  redirect(APP_ROUTES.home);
+  redirect(APP_ROUTES.dashboard);
 }
 
 export async function loginAction(
@@ -54,7 +54,7 @@ export async function loginAction(
   }
 
   await createSession(result.user.id);
-  redirect(APP_ROUTES.home);
+  redirect(APP_ROUTES.dashboard);
 }
 
 export async function logoutAction() {

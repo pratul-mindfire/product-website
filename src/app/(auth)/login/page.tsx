@@ -10,7 +10,7 @@ export default async function LoginPage() {
   const user = await getSessionUser();
 
   if (user) {
-    redirect(APP_ROUTES.home);
+    redirect(APP_ROUTES.dashboard);
   }
 
   return (

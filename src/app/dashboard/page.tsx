@@ -3,14 +3,14 @@ import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { SectionBadge } from "@/components/ui/section-badge";
 import { APP_ROUTES } from "@/constants/app";
-import { DASHBOARD_NAV_ITEMS, DASHBOARD_TEXT } from "@/constants/dashboard";
+import { DASHBOARD_TEXT } from "@/constants/dashboard";
+import { logoutAction } from "@/features/auth/actions";
 import { ProfileSummary } from "@/features/dashboard/components/profile-summary";
 import { SidebarNav } from "@/features/dashboard/components/sidebar-nav";
 import { StatsCard } from "@/features/dashboard/components/stats-card";
-import { logoutAction } from "@/features/auth/actions";
 import { getSessionUser } from "@/server/auth/session";
 
-export default async function Home() {
+export default async function DashboardPage() {
   const user = await getSessionUser();
 
   if (!user) {
@@ -36,7 +36,7 @@ export default async function Home() {
               </div>
             </div>
 
-            <SidebarNav items={DASHBOARD_NAV_ITEMS} />
+            <SidebarNav items={DASHBOARD_TEXT.navItems} />
           </div>
 
           <div className="space-y-4">
