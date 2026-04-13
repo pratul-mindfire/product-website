@@ -2,8 +2,8 @@ import { redirect } from "next/navigation";
 
 import { APP_ROUTES } from "@/constants/app";
 import { AUTH_FORM_MODES, AUTH_FORM_TEXT } from "@/constants/auth";
-import { registerAction } from "@/features/auth/actions";
-import { AuthForm } from "@/features/auth/components/auth-form";
+import { registerAction } from "@/app/features/auth/actions";
+import { AuthForm } from "@/app/features/auth/components/auth-form";
 import { getSessionUser } from "@/server/auth/session";
 
 export default async function RegisterPage() {

@@ -10,6 +10,14 @@ export const DATABASE_CONFIG = {
   duplicateKeyCode: 11000,
 } as const;
 
+export const CMS_CONFIG = {
+  env: {
+    baseUrl: "NEXT_PUBLIC_STRAPI_URL",
+  },
+  missingBaseUrlMessage:
+    "Missing NEXT_PUBLIC_STRAPI_URL for landing page content.",
+} as const;
+
 export const SESSION_CONFIG = {
   cookieName: "session",
   fallbackSecret: "local-dev-auth-secret-change-me",

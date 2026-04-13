@@ -1,13 +1,13 @@
 import { redirect } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
-import { SectionBadge } from "@/components/ui/section-badge";
+import { Button } from "@/app/components/ui/button";
+import { SectionBadge } from "@/app/components/ui/section-badge";
 import { APP_ROUTES } from "@/constants/app";
 import { DASHBOARD_TEXT } from "@/constants/dashboard";
-import { logoutAction } from "@/features/auth/actions";
-import { ProfileSummary } from "@/features/dashboard/components/profile-summary";
-import { SidebarNav } from "@/features/dashboard/components/sidebar-nav";
-import { StatsCard } from "@/features/dashboard/components/stats-card";
+import { logoutAction } from "@/app/features/auth/actions";
+import { ProfileSummary } from "@/app/features/dashboard/components/profile-summary";
+import { SidebarNav } from "@/app/features/dashboard/components/sidebar-nav";
+import { StatsCard } from "@/app/features/dashboard/components/stats-card";
 import { getSessionUser } from "@/server/auth/session";
 
 export default async function DashboardPage() {
