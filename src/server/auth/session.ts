@@ -3,37 +3,42 @@ import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 
+import { appEnv } from "@/config/env";
+import { SESSION_CONFIG } from "@/constants/server";
 import { getUserById, type SessionUser } from "@/server/auth/users";
 
-const SESSION_COOKIE = "session";
-const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
-
 function getSessionSecret() {
-  return process.env.AUTH_SECRET ?? "local-dev-auth-secret-change-me";
+  return appEnv.authSecret;
 }
 
 function encodePayload(payload: object) {
-  return Buffer.from(JSON.stringify(payload)).toString("base64url");
+  return Buffer.from(JSON.stringify(payload)).toString(
+    SESSION_CONFIG.base64Encoding,
+  );
 }
 
 function decodePayload<T>(value: string) {
-  return JSON.parse(Buffer.from(value, "base64url").toString("utf8")) as T;
+  return JSON.parse(
+    Buffer.from(value, SESSION_CONFIG.base64Encoding).toString(
+      SESSION_CONFIG.utf8Encoding,
+    ),
+  ) as T;
 }
 
 function sign(value: string) {
-  return createHmac("sha256", getSessionSecret())
+  return createHmac(SESSION_CONFIG.hmacAlgorithm, getSessionSecret())
     .update(value)
-    .digest("base64url");
+    .digest(SESSION_CONFIG.base64Encoding);
 }
 
 function createToken(userId: string, expiresAt: number) {
   const payload = encodePayload({ userId, expiresAt });
   const signature = sign(payload);
-  return `${payload}.${signature}`;
+  return `${payload}${SESSION_CONFIG.tokenSeparator}${signature}`;
 }
 
 function verifyToken(token: string) {
-  const [payload, signature] = token.split(".");
+  const [payload, signature] = token.split(SESSION_CONFIG.tokenSeparator);
 
   if (!payload || !signature) {
     return null;
@@ -61,27 +66,27 @@ function verifyToken(token: string) {
 }
 
 export async function createSession(userId: string) {
-  const expiresAt = Date.now() + SESSION_DURATION_MS;
+  const expiresAt = Date.now() + SESSION_CONFIG.durationMs;
   const token = createToken(userId, expiresAt);
   const cookieStore = await cookies();
 
-  cookieStore.set(SESSION_COOKIE, token, {
+  cookieStore.set(SESSION_CONFIG.cookieName, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: appEnv.nodeEnv === "production",
+    sameSite: SESSION_CONFIG.sameSite,
     expires: new Date(expiresAt),
-    path: "/",
+    path: SESSION_CONFIG.path,
   });
 }
 
 export async function deleteSession() {
   const cookieStore = await cookies();
-  cookieStore.delete(SESSION_COOKIE);
+  cookieStore.delete(SESSION_CONFIG.cookieName);
 }
 
 export async function getSessionUser(): Promise<SessionUser | null> {
   const cookieStore = await cookies();
-  const token = cookieStore.get(SESSION_COOKIE)?.value;
+  const token = cookieStore.get(SESSION_CONFIG.cookieName)?.value;
 
   if (!token) {
     return null;

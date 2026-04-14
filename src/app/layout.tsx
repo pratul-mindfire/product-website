@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
+
+import { QueryProvider } from "@/app/components/providers/query-provider";
+import { APP_METADATA } from "@/constants/app";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Product Website",
-  description: "Product website with register, login, and logout flow",
+  title: APP_METADATA.title,
+  description: APP_METADATA.description,
 };
 
 export default function RootLayout({
@@ -13,7 +16,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full antialiased">
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <QueryProvider>{children}</QueryProvider>
+      </body>
     </html>
   );
 }

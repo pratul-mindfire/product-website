@@ -2,6 +2,7 @@
 node_modules
 out
 build
+backend
 package-lock.json
 public
 AGENTS.md
