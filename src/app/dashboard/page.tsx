@@ -17,6 +17,8 @@ export default async function DashboardPage() {
   }
 
   const user = session.user;
+  const userName = user.name ?? "Guest";
+  const userEmail = user.email ?? null;
 
   return (
     <main className="min-h-screen bg-[linear-gradient(135deg,#f8fafc_0%,#eff6ff_45%,#fff7ed_100%)] px-4 py-4 sm:px-6 sm:py-6">
@@ -41,7 +43,7 @@ export default async function DashboardPage() {
           </div>
 
           <div className="space-y-4">
-            <ProfileSummary email={user.email} name={user.name} />
+            <ProfileSummary email={userEmail} name={userName} />
 
             <LogoutButton>{DASHBOARD_TEXT.logout}</LogoutButton>
           </div>
@@ -51,7 +53,7 @@ export default async function DashboardPage() {
           <div className="max-w-3xl">
             <SectionBadge>{DASHBOARD_TEXT.badge}</SectionBadge>
             <h2 className="mt-6 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
-              {DASHBOARD_TEXT.welcomePrefix} {user.name.split(" ")[0]}.
+              {DASHBOARD_TEXT.welcomePrefix} {userName.split(" ")[0]}.
             </h2>
             <p className="mt-4 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
               {DASHBOARD_TEXT.heroDescription}
