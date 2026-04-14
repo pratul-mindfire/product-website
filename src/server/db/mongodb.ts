@@ -2,6 +2,7 @@ import "server-only";
 
 import { MongoClient } from "mongodb";
 
+import { appEnv } from "@/config/env";
 import { DATABASE_CONFIG } from "@/constants/server";
 
 declare global {
@@ -9,7 +10,7 @@ declare global {
 }
 
 function getMongoUri() {
-  const uri = process.env[DATABASE_CONFIG.env.uri];
+  const uri = appEnv.mongodbUri;
 
   if (!uri) {
     throw new Error(DATABASE_CONFIG.missingUriMessage);
@@ -19,7 +20,7 @@ function getMongoUri() {
 }
 
 function getMongoDbName() {
-  return process.env[DATABASE_CONFIG.env.db] ?? DATABASE_CONFIG.fallbackDbName;
+  return appEnv.mongodbDb;
 }
 
 function getClientPromise() {

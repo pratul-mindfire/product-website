@@ -1,8 +1,9 @@
 import axios from "axios";
 
+import { appEnv } from "@/config/env";
 import { CMS_CONFIG } from "@/constants/server";
 
-const cmsBaseUrl = process.env.NEXT_PUBLIC_STRAPI_URL?.replace(/\/$/, "") ?? "";
+const cmsBaseUrl = appEnv.cmsBaseUrl;
 
 export const cmsAxios = axios.create({
   baseURL: cmsBaseUrl || undefined,

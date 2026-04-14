@@ -3,11 +3,12 @@ import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 
+import { appEnv } from "@/config/env";
 import { SESSION_CONFIG } from "@/constants/server";
 import { getUserById, type SessionUser } from "@/server/auth/users";
 
 function getSessionSecret() {
-  return process.env.AUTH_SECRET ?? SESSION_CONFIG.fallbackSecret;
+  return appEnv.authSecret;
 }
 
 function encodePayload(payload: object) {
@@ -71,7 +72,7 @@ export async function createSession(userId: string) {
 
   cookieStore.set(SESSION_CONFIG.cookieName, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: appEnv.nodeEnv === "production",
     sameSite: SESSION_CONFIG.sameSite,
     expires: new Date(expiresAt),
     path: SESSION_CONFIG.path,
