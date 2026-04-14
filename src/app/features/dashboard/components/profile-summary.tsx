@@ -1,8 +1,8 @@
 import { Card } from "@/app/components/ui/card";
 
 type ProfileSummaryProps = {
-  email: string;
-  name: string;
+  email: string | null;
+  name: string | null;
 };
 
 export function ProfileSummary({ email, name }: ProfileSummaryProps) {

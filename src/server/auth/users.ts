@@ -6,11 +6,13 @@ import {
   scryptSync,
   timingSafeEqual,
 } from "node:crypto";
-import { MongoServerError } from "mongodb";
 
 import { AUTH_VALIDATION } from "@/constants/auth";
-import { DATABASE_CONFIG, SESSION_CONFIG } from "@/constants/server";
-import { getDatabase } from "@/server/db/mongodb";
+import { SESSION_CONFIG } from "@/constants/server";
+import {
+  getDatabase,
+  isUniqueConstraintError,
+} from "@/server/db/sqlite";
 
 type StoredUser = {
   id: string;
@@ -66,8 +68,7 @@ function mapUser(user: Pick<StoredUser, "id" | "name" | "email">): SessionUser {
 }
 
 async function getUsersCollection() {
-  const database = await getDatabase();
-  return database.collection<StoredUser>(DATABASE_CONFIG.usersCollection);
+  return getDatabase();
 }
 
 export async function registerUser(input: {
@@ -94,8 +95,24 @@ export async function registerUser(input: {
     };
   }
 
-  const users = await getUsersCollection();
-  const existingUser = await users.findOne({ email });
+  const database = await getUsersCollection();
+  const existingUser = database
+    .prepare(
+      `
+        SELECT id, name, email, password_hash, created_at
+        FROM users
+        WHERE email = ?
+      `,
+    )
+    .get(email) as
+    | {
+        id: string;
+        name: string;
+        email: string;
+        password_hash: string;
+        created_at: string;
+      }
+    | undefined;
 
   if (existingUser) {
     return {
@@ -113,12 +130,16 @@ export async function registerUser(input: {
   };
 
   try {
-    await users.insertOne(user);
+    database
+      .prepare(
+        `
+          INSERT INTO users (id, name, email, password_hash, created_at)
+          VALUES (?, ?, ?, ?, ?)
+        `,
+      )
+      .run(user.id, user.name, user.email, user.passwordHash, user.createdAt);
   } catch (error) {
-    if (
-      error instanceof MongoServerError &&
-      error.code === DATABASE_CONFIG.duplicateKeyCode
-    ) {
+    if (isUniqueConstraintError(error)) {
       return {
         ok: false as const,
         error: AUTH_VALIDATION.duplicateEmail,
@@ -140,8 +161,34 @@ export async function authenticateUser(input: {
 }) {
   const email = normalizeEmail(input.email);
   const password = input.password;
-  const users = await getUsersCollection();
-  const user = await users.findOne({ email });
+  const database = await getUsersCollection();
+  const row = database
+    .prepare(
+      `
+        SELECT id, name, email, password_hash, created_at
+        FROM users
+        WHERE email = ?
+      `,
+    )
+    .get(email) as
+    | {
+        id: string;
+        name: string;
+        email: string;
+        password_hash: string;
+        created_at: string;
+      }
+    | undefined;
+
+  const user = row
+    ? {
+        id: row.id,
+        name: row.name,
+        email: row.email,
+        passwordHash: row.password_hash,
+        createdAt: row.created_at,
+      }
+    : null;
 
   if (!user || !verifyPassword(password, user.passwordHash)) {
     return { ok: false as const, error: AUTH_VALIDATION.invalidCredentials };
@@ -154,12 +201,20 @@ export async function authenticateUser(input: {
 }
 
 export async function getUserById(id: string): Promise<SessionUser | null> {
-  const users = await getUsersCollection();
-  const user = await users.findOne({ id });
+  const database = await getUsersCollection();
+  const row = database
+    .prepare(
+      `
+        SELECT id, name, email
+        FROM users
+        WHERE id = ?
+      `,
+    )
+    .get(id) as { id: string; name: string; email: string } | undefined;
 
-  if (!user) {
+  if (!row) {
     return null;
   }
 
-  return mapUser(user);
+  return mapUser(row);
 }

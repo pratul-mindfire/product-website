@@ -7,7 +7,7 @@ import {
   getCmsFeatures,
   getCmsLandingPage,
   getCmsPlans,
-} from "@/app/api/cms.api";
+} from "@/app/api/cms/cms.api";
 
 export function useCMS() {
   const landingPageQuery = useQuery({

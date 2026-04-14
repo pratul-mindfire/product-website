@@ -2,10 +2,10 @@ import "server-only";
 
 import { randomUUID } from "node:crypto";
 
-import { MongoServerError } from "mongodb";
-
-import { DATABASE_CONFIG } from "@/constants/server";
-import { getDatabase } from "@/server/db/mongodb";
+import {
+  getDatabase,
+  isUniqueConstraintError,
+} from "@/server/db/sqlite";
 
 type Subscriber = {
   createdAt: string;
@@ -14,8 +14,7 @@ type Subscriber = {
 };
 
 async function getSubscribersCollection() {
-  const database = await getDatabase();
-  return database.collection<Subscriber>(DATABASE_CONFIG.subscribersCollection);
+  return getDatabase();
 }
 
 export async function subscribeEmail(email: string) {
@@ -29,20 +28,24 @@ export async function subscribeEmail(email: string) {
   }
 
   try {
-    await (
-      await getSubscribersCollection()
-    ).insertOne({
+    const subscriber: Subscriber = {
       id: randomUUID(),
       email: normalizedEmail,
       createdAt: new Date().toISOString(),
-    });
+    };
+
+    (await getSubscribersCollection())
+      .prepare(
+        `
+          INSERT INTO subscribers (id, email, created_at)
+          VALUES (?, ?, ?)
+        `,
+      )
+      .run(subscriber.id, subscriber.email, subscriber.createdAt);
 
     return { ok: true as const };
   } catch (error) {
-    if (
-      error instanceof MongoServerError &&
-      error.code === DATABASE_CONFIG.duplicateKeyCode
-    ) {
+    if (isUniqueConstraintError(error)) {
       return { ok: true as const };
     }
 
