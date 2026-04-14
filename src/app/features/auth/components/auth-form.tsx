@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { startTransition, useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { Button } from "@/app/components/ui/button";
 import { Card } from "@/app/components/ui/card";
 import { TextInput } from "@/app/components/ui/text-input";
+import { APP_ROUTES } from "@/constants/app";
 import {
   AUTH_FORM_FIELDS,
   AUTH_FORM_MODES,
@@ -16,7 +19,10 @@ import {
 import type { AuthFormState } from "@/app/features/auth/actions";
 
 type AuthFormProps = {
-  action: (state: AuthFormState, formData: FormData) => Promise<AuthFormState>;
+  registerAction?: (
+    state: AuthFormState,
+    formData: FormData,
+  ) => Promise<AuthFormState>;
   mode: (typeof AUTH_FORM_MODES)[keyof typeof AUTH_FORM_MODES];
 };
 
@@ -34,10 +40,53 @@ function SubmitButton({ label }: { label: string }) {
   );
 }
 
-export function AuthForm({ action, mode }: AuthFormProps) {
-  const [state, formAction] = useActionState(action, initialState);
+export function AuthForm({ registerAction, mode }: AuthFormProps) {
+  const router = useRouter();
   const isRegister = mode === AUTH_FORM_MODES.register;
   const content = isRegister ? AUTH_FORM_TEXT.register : AUTH_FORM_TEXT.login;
+
+  async function handleSubmit(
+    previousState: AuthFormState,
+    formData: FormData,
+  ) {
+    void previousState;
+
+    if (isRegister) {
+      if (!registerAction) {
+        return { error: "Registration is unavailable." };
+      }
+
+      const registerState = await registerAction(initialState, formData);
+
+      if (registerState.error) {
+        return registerState;
+      }
+    }
+
+    const email = formData.get(AUTH_FORM_FIELDS.email);
+    const password = formData.get(AUTH_FORM_FIELDS.password);
+
+    const signInResult = await signIn("credentials", {
+      email: typeof email === "string" ? email : "",
+      password: typeof password === "string" ? password : "",
+      redirect: false,
+    });
+
+    if (!signInResult || signInResult.error) {
+      return {
+        error: signInResult?.error ?? AUTH_VALIDATION.invalidCredentials,
+      };
+    }
+
+    startTransition(() => {
+      router.push(APP_ROUTES.dashboard);
+      router.refresh();
+    });
+
+    return { error: null };
+  }
+
+  const [state, formAction] = useActionState(handleSubmit, initialState);
 
   return (
     <Card className="w-full max-w-md bg-white/90 p-8 shadow-[0_30px_80px_rgba(15,23,42,0.12)] backdrop-blur">

@@ -1,13 +1,13 @@
 export const DATABASE_CONFIG = {
   env: {
-    uri: "MONGODB_URI",
-    db: "MONGODB_DB",
+    path: "DATABASE_PATH",
   },
-  fallbackDbName: "product-website",
-  usersCollection: "users",
-  subscribersCollection: "subscribers",
-  missingUriMessage: "Missing MONGODB_URI environment variable.",
-  duplicateKeyCode: 11000,
+  usersTable: "users",
+  subscribersTable: "subscribers",
+  refreshSessionsTable: "refresh_sessions",
+  defaultPath: "./data/product-website.db",
+  missingPathMessage: "Missing DATABASE_PATH environment variable.",
+  uniqueConstraintCode: "ERR_SQLITE_ERROR",
 } as const;
 
 export const CMS_CONFIG = {
@@ -19,14 +19,11 @@ export const CMS_CONFIG = {
 } as const;
 
 export const SESSION_CONFIG = {
-  cookieName: "session",
   fallbackSecret: "local-dev-auth-secret-change-me",
-  sameSite: "lax",
-  path: "/",
-  durationMs: 7 * 24 * 60 * 60 * 1000,
-  hmacAlgorithm: "sha256",
+  accessTokenDurationMs: 24 * 60 * 60 * 1000,
+  refreshTokenDurationMs: 7 * 24 * 60 * 60 * 1000,
+  refreshIntervalMs: 12 * 60 * 60 * 1000,
   tokenSeparator: ".",
   hashEncoding: "hex",
   base64Encoding: "base64url",
-  utf8Encoding: "utf8",
 } as const;

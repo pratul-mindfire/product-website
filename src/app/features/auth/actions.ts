@@ -1,11 +1,7 @@
 "use server";
 
-import { redirect } from "next/navigation";
-
-import { APP_ROUTES } from "@/constants/app";
 import { AUTH_FORM_FIELDS } from "@/constants/auth";
-import { authenticateUser, registerUser } from "@/server/auth/users";
-import { createSession, deleteSession } from "@/server/auth/session";
+import { registerUser } from "@/server/auth/users";
 
 export type AuthFormState = {
   error: string | null;
@@ -35,29 +31,5 @@ export async function registerAction(
     return { error: result.error };
   }
 
-  await createSession(result.user.id);
-  redirect(APP_ROUTES.dashboard);
-}
-
-export async function loginAction(
-  previousState: AuthFormState = initialState,
-  formData: FormData,
-): Promise<AuthFormState> {
-  void previousState;
-  const email = readField(formData, AUTH_FORM_FIELDS.email);
-  const password = readField(formData, AUTH_FORM_FIELDS.password);
-
-  const result = await authenticateUser({ email, password });
-
-  if (!result.ok) {
-    return { error: result.error };
-  }
-
-  await createSession(result.user.id);
-  redirect(APP_ROUTES.dashboard);
-}
-
-export async function logoutAction() {
-  await deleteSession();
-  redirect(APP_ROUTES.login);
+  return { error: null };
 }

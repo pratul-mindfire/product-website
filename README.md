@@ -1,4 +1,17 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+This is a Next.js product website with:
+
+- local auth and newsletter storage in SQLite
+- CMS content fetched from Strapi
+
+## Environment
+
+Create a `.env.local` file with:
+
+```bash
+DATABASE_PATH=./data/product-website.db
+AUTH_SECRET=replace-this-with-a-long-random-secret
+NEXT_PUBLIC_STRAPI_URL=http://localhost:1337
+```
 
 ## Getting Started
 

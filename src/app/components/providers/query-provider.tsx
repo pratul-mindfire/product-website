@@ -2,6 +2,9 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
+import { SessionProvider } from "next-auth/react";
+
+import { SESSION_CONFIG } from "@/constants/server";
 
 type QueryProviderProps = {
   children: React.ReactNode;
@@ -21,6 +24,11 @@ export function QueryProvider({ children }: QueryProviderProps) {
   );
 
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <SessionProvider
+      refetchInterval={Math.floor(SESSION_CONFIG.refreshIntervalMs / 1000)}
+      refetchOnWindowFocus
+    >
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    </SessionProvider>
   );
 }

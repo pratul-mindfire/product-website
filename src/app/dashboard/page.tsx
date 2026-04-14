@@ -1,21 +1,22 @@
 import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
 
-import { Button } from "@/app/components/ui/button";
 import { SectionBadge } from "@/app/components/ui/section-badge";
 import { APP_ROUTES } from "@/constants/app";
 import { DASHBOARD_TEXT } from "@/constants/dashboard";
-import { logoutAction } from "@/app/features/auth/actions";
+import { LogoutButton } from "@/app/features/auth/components/logout-button";
 import { ProfileSummary } from "@/app/features/dashboard/components/profile-summary";
 import { SidebarNav } from "@/app/features/dashboard/components/sidebar-nav";
-import { StatsCard } from "@/app/features/dashboard/components/stats-card";
-import { getSessionUser } from "@/server/auth/session";
+import { authOptions } from "@/server/auth/options";
 
 export default async function DashboardPage() {
-  const user = await getSessionUser();
+  const session = await getServerSession(authOptions);
 
-  if (!user) {
+  if (!session || session.error || !session.user) {
     redirect(APP_ROUTES.login);
   }
+
+  const user = session.user;
 
   return (
     <main className="min-h-screen bg-[linear-gradient(135deg,#f8fafc_0%,#eff6ff_45%,#fff7ed_100%)] px-4 py-4 sm:px-6 sm:py-6">
@@ -42,11 +43,7 @@ export default async function DashboardPage() {
           <div className="space-y-4">
             <ProfileSummary email={user.email} name={user.name} />
 
-            <form action={logoutAction}>
-              <Button type="submit" variant="secondary" width="full">
-                {DASHBOARD_TEXT.logout}
-              </Button>
-            </form>
+            <LogoutButton>{DASHBOARD_TEXT.logout}</LogoutButton>
           </div>
         </aside>
 
@@ -59,26 +56,6 @@ export default async function DashboardPage() {
             <p className="mt-4 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
               {DASHBOARD_TEXT.heroDescription}
             </p>
-          </div>
-
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            <StatsCard
-              description={DASHBOARD_TEXT.cards.session.description}
-              label={DASHBOARD_TEXT.cards.session.label}
-              tone="muted"
-              value={DASHBOARD_TEXT.cards.session.value}
-            />
-            <StatsCard
-              description={DASHBOARD_TEXT.cards.email.description}
-              label={DASHBOARD_TEXT.cards.email.label}
-              value={user.email}
-            />
-            <StatsCard
-              description={DASHBOARD_TEXT.cards.nextStep.description}
-              label={DASHBOARD_TEXT.cards.nextStep.label}
-              tone="highlight"
-              value={DASHBOARD_TEXT.cards.nextStep.value}
-            />
           </div>
         </section>
       </div>
